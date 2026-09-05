@@ -26,4 +26,4 @@ One concern per pull request. Fill in the template, keep the README in step with
 
 ## 🚀 Releasing
 
-Merging to `main` bumps `package.json` and pushes `vX.Y.Z`; the tag opens a pre-release. Promoting it to a release moves the floating `v1` tag onto it, which is what pinned consumers follow. Nothing is tagged by hand.
+Merging to `main` bumps `package.json` and pushes `vX.Y.Z`; the tag opens a pre-release; promoting it publishes the release. Releases are immutable and nothing is retagged: repositories pin an exact version and Dependabot opens the pull request when a newer one exists.

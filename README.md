@@ -1,6 +1,6 @@
 # .github
 
-The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin the floating major: `@v1`. It moves when a release of this repository is promoted, never by hand.
+The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin an exact release, for example `@v1.4.0`; Dependabot opens the pull request when a newer one exists. Releases are immutable, nothing here is retagged.
 
 ## ⚙️ Workflows
 
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   version:
     if: "!startsWith(github.event.head_commit.message, 'chore: Release v')"
-    uses: droneey/.github/.github/workflows/cd-version.yml@v1
+    uses: droneey/.github/.github/workflows/cd-version.yml@v1.4.0
     permissions:
       contents: write
       pull-requests: read
@@ -43,7 +43,7 @@ on:
     tags: ['v*']
 jobs:
   release:
-    uses: droneey/.github/.github/workflows/cd-release.yml@v1
+    uses: droneey/.github/.github/workflows/cd-release.yml@v1.4.0
     permissions:
       contents: write
 ```
@@ -57,7 +57,7 @@ The notes themselves come from `.github/actions/changelog`, a composite action t
 
 ### 🔖 cd-pre-release
 
-`cd-release` with `prerelease: true` and `packages` defaulting to `package.json`: the tag becomes a pre-release to promote by hand, and the repository's own deploy runs on `release: released`.
+There is no separate pre-release workflow: a repository's `cd-pre-release.yml` calls `cd-release.yml` with `prerelease: true`, so a tag push opens a pre-release that a human promotes.
 
 ```yaml
 name: 🔖 Pre-release
@@ -66,14 +66,13 @@ on:
     tags: ['v*']
 jobs:
   pre-release:
-    uses: droneey/.github/.github/workflows/cd-pre-release.yml@v1
+    uses: droneey/.github/.github/workflows/cd-release.yml@v1.4.0
     permissions:
       contents: write
+    with:
+      packages: package.json
+      prerelease: true
 ```
-
-| Input | Default | Meaning |
-|---|---|---|
-| `packages` | `package.json` | Space-separated globs of the `package.json` files named in the notes |
 
 ### 📤 cd-deploy-npm
 
@@ -86,7 +85,7 @@ on:
     types: [released]
 jobs:
   deploy:
-    uses: droneey/.github/.github/workflows/cd-deploy-npm.yml@v1
+    uses: droneey/.github/.github/workflows/cd-deploy-npm.yml@v1.4.0
     permissions:
       contents: read
       id-token: write

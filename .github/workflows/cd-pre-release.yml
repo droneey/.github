@@ -1,21 +1,14 @@
 name: 🔖 Pre-release
 
 on:
-  workflow_call:
-    inputs:
-      packages:
-        description: 'Space-separated globs of the package.json files listed in the release notes'
-        type: string
-        required: false
-        default: package.json
   push:
     tags: ['v*']
 
 jobs:
   pre-release:
-    uses: droneey/.github/.github/workflows/cd-release.yml@v1
+    uses: ./.github/workflows/cd-release.yml
     permissions:
       contents: write
     with:
-      packages: ${{ inputs.packages || 'package.json' }}
+      packages: package.json
       prerelease: true

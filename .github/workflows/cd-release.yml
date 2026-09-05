@@ -27,10 +27,51 @@ jobs:
 
       - name: 📝 Generate the changelog
         id: changelog
-        uses: droneey/.github/.github/actions/changelog@v1
-        with:
-          tag: ${{ github.ref_name }}
-          packages: ${{ inputs.packages }}
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p' || true)
+
+          BODY=""
+          # shellcheck disable=SC2206
+          FILES=($PACKAGES)
+          if [ "${#FILES[@]}" -gt 0 ]; then
+            BODY="## Packages"$'\n\n'
+            for FILE in "${FILES[@]}"; do
+              NAME=$(jq -r '.name' "$FILE")
+              VERSION=$(jq -r '.version' "$FILE")
+              BODY="${BODY}- \`${NAME}@${VERSION}\`"$'\n'
+            done
+            BODY="${BODY}"$'\n'
+          fi
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..${TAG}"
+            FEATURES=$(git log "$RANGE" --pretty=format:"- %s" --grep="^feat" --no-merges)
+            FIXES=$(git log "$RANGE" --pretty=format:"- %s" --grep="^fix\|^hotfix" --no-merges)
+
+            BODY="${BODY}## What's Changed"$'\n\n'
+            if [ -n "$FEATURES" ]; then
+              BODY="${BODY}### Features"$'\n'"${FEATURES}"$'\n\n'
+            fi
+            if [ -n "$FIXES" ]; then
+              BODY="${BODY}### Fixes"$'\n'"${FIXES}"$'\n\n'
+            fi
+            BODY="${BODY}**Full Changelog**: https://github.com/${REPO}/compare/${PREV_TAG}...${TAG}"
+          else
+            BODY="${BODY}Initial release."
+          fi
+
+          DELIM="EOF_$(date +%s)_${RANDOM}"
+          {
+            echo "body<<${DELIM}"
+            echo "$BODY"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: 🔖 Open or update the release
         env:
@@ -41,14 +82,7 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG exists, updating it"
-            gh release edit "$TAG" \
-              --title "$TAG" \
-              --notes "$BODY" \
-              --prerelease="$PRERELEASE"
+            gh release edit "$TAG" --title "$TAG" --notes "$BODY" --prerelease="$PRERELEASE"
           else
-            gh release create "$TAG" \
-              --title "$TAG" \
-              --notes "$BODY" \
-              --prerelease="$PRERELEASE"
+            gh release create "$TAG" --title "$TAG" --notes "$BODY" --prerelease="$PRERELEASE"
           fi
