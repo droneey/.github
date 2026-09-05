@@ -17,7 +17,7 @@ on:
 
 jobs:
   version:
-    if: github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore: Release v')
+    if: "github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore: Release v')"
     runs-on: ubuntu-latest
     concurrency:
       group: version-${{ github.repository }}
