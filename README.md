@@ -6,7 +6,7 @@ Reusable GitHub workflows shared by droneey repositories. Pin the floating major
 
 ### 🏷️ cd-version
 
-Push to `main`: the merged branch prefix decides the bump (`feature/*` minor, `fix/*` and `hotfix/*` patch), every listed `package.json` receives the version, and `chore: Release vX.Y.Z` is pushed together with the `vX.Y.Z` tag.
+Push to `main`: the merged branch prefix decides the bump (`feature/*` minor, `fix/*`, `hotfix/*` and `dependabot/*` patch), every listed `package.json` receives the version, and `chore: Release vX.Y.Z` is pushed together with the `vX.Y.Z` tag.
 
 ```yaml
 name: 🏷️ Version

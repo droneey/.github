@@ -52,6 +52,7 @@ jobs:
           case "$PREFIX" in
             feature) echo "type=minor" >> "$GITHUB_OUTPUT" ;;
             fix|hotfix) echo "type=patch" >> "$GITHUB_OUTPUT" ;;
+            dependabot) echo "type=patch" >> "$GITHUB_OUTPUT" ;;
             *) echo "type=" >> "$GITHUB_OUTPUT" ;;
           esac
 
