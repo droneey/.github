@@ -1,0 +1,76 @@
+name: 🔖 Pre-release
+
+on:
+  workflow_call:
+    inputs:
+      packages:
+        description: 'Space-separated globs of the package.json files listed in the release notes'
+        type: string
+        required: false
+        default: package.json
+
+jobs:
+  pre-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 📝 Generate changelog
+        id: changelog
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p' || true)
+
+          BODY="## Packages"$'\n\n'
+          # shellcheck disable=SC2206
+          FILES=($PACKAGES)
+          for FILE in "${FILES[@]}"; do
+            NAME=$(jq -r '.name' "$FILE")
+            VERSION=$(jq -r '.version' "$FILE")
+            BODY="${BODY}- \`${NAME}@${VERSION}\`"$'\n'
+          done
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..${TAG}"
+            FEATURES=$(git log "$RANGE" --pretty=format:"- %s" --grep="^feat" --no-merges)
+            FIXES=$(git log "$RANGE" --pretty=format:"- %s" --grep="^fix\|^hotfix" --no-merges)
+
+            BODY="${BODY}"$'\n'"## What's Changed"$'\n\n'
+            if [ -n "$FEATURES" ]; then
+              BODY="${BODY}### Features"$'\n'"${FEATURES}"$'\n\n'
+            fi
+            if [ -n "$FIXES" ]; then
+              BODY="${BODY}### Fixes"$'\n'"${FIXES}"$'\n\n'
+            fi
+            BODY="${BODY}**Full Changelog**: https://github.com/${REPO}/compare/${PREV_TAG}...${TAG}"
+          else
+            BODY="${BODY}"$'\n'"Initial release."
+          fi
+
+          DELIM="EOF_$(date +%s)_${RANDOM}"
+          {
+            echo "body<<${DELIM}"
+            echo "$BODY"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 🔖 Create the pre-release
+        env:
+          TAG: ${{ github.ref_name }}
+          BODY: ${{ steps.changelog.outputs.body }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "$BODY" \
+            --prerelease
