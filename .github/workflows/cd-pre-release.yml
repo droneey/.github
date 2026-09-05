@@ -8,6 +8,8 @@ on:
         type: string
         required: false
         default: package.json
+  push:
+    tags: ['v*']
 
 jobs:
   pre-release:
@@ -15,5 +17,5 @@ jobs:
     permissions:
       contents: write
     with:
-      packages: ${{ inputs.packages }}
+      packages: ${{ inputs.packages || 'package.json' }}
       prerelease: true

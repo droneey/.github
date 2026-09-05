@@ -1,6 +1,6 @@
 # .github
 
-The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin the floating major: `@v1`.
+The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin the floating major: `@v1`. It moves when a release of this repository is promoted, never by hand.
 
 ## ⚙️ Workflows
 

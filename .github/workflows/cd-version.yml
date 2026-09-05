@@ -12,18 +12,24 @@ on:
       token:
         description: 'A personal access token; a tag pushed with GITHUB_TOKEN does not trigger other workflows'
         required: true
+  push:
+    branches: [main]
 
 jobs:
   version:
+    if: github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore: Release v')
     runs-on: ubuntu-latest
+    concurrency:
+      group: version-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: read
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
-          token: ${{ secrets.token }}
+          token: ${{ secrets.token || secrets.GH_TOKEN }}
           fetch-depth: 2
 
       - name: 🔎 Determine bump type
@@ -60,7 +66,7 @@ jobs:
         if: steps.bump.outputs.type
         env:
           BUMP: ${{ steps.bump.outputs.type }}
-          PACKAGES: ${{ inputs.packages }}
+          PACKAGES: ${{ inputs.packages || 'package.json' }}
           BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail

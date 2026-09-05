@@ -2,7 +2,7 @@
 
 ## 🌱 Branches
 
-Branch off `main` as `feature/*`, `fix/*` or `hotfix/*` - the prefixes `cd-version` reads in the repositories that call it. This hub carries no `package.json` and releases by hand; see Releasing.
+Branch off `main` as `feature/*`, `fix/*` or `hotfix/*` - the prefixes `cd-version` reads in the repositories that call it. The merge bumps the version and tags it, as in every other repository; see Releasing.
 
 ## 📝 Commits
 
@@ -26,12 +26,4 @@ One concern per pull request. Fill in the template, keep the README in step with
 
 ## 🚀 Releasing
 
-Tag the merged commit `vX.Y.Z`, then move the floating major so pinned consumers pick the release up:
-
-```bash
-git tag v1.2.0
-git tag -f v1 && git push -f origin v1
-git push origin v1.2.0
-```
-
-Consumers pin `@v1`, so a change that breaks them is a new major and a new floating tag, never a move of this one.
+Merging to `main` bumps `package.json` and pushes `vX.Y.Z`; the tag opens a pre-release. Promoting it to a release moves the floating `v1` tag onto it, which is what pinned consumers follow. Nothing is tagged by hand.
