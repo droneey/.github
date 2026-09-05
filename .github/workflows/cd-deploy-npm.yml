@@ -1,0 +1,110 @@
+name: 📤 Deploy to npm
+
+on:
+  workflow_call:
+    inputs:
+      packages:
+        description: 'Space-separated globs of the package.json files to build and publish; private ones are skipped'
+        type: string
+        required: false
+        default: package.json
+      node-version:
+        description: 'The Node version that publishes'
+        type: string
+        required: false
+        default: '24'
+    secrets:
+      npm_token:
+        description: 'An npm automation token with publish rights'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+          fetch-depth: 0
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: https://registry.npmjs.org
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build the packages
+        env:
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          # shellcheck disable=SC2206
+          FILES=($PACKAGES)
+          [ "${#FILES[@]}" -gt 0 ] || { echo "::error::no package.json matches: $PACKAGES"; exit 1; }
+
+          for FILE in "${FILES[@]}"; do
+            if ! jq -e '.scripts.build' "$FILE" > /dev/null; then
+              echo "No build script in $FILE, skipping"
+              continue
+            fi
+            echo "::group::$FILE"
+            (cd "$(dirname "$FILE")" && bun run build)
+            echo "::endgroup::"
+          done
+
+      - name: 📤 Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          publish() {
+            local dir="$1" name="$2" attempt output
+            local -a flags=(--access public --provenance)
+
+            for attempt in provenance plain; do
+              if output=$(cd "$dir" && npm publish "${flags[@]}" 2>&1); then
+                echo "Published $name"
+                return 0
+              fi
+              if grep -q 'You cannot publish over the previously published versions' <<< "$output"; then
+                echo "Already published $name, skipping."
+                return 0
+              fi
+              if [ "$attempt" = provenance ]; then
+                echo "::warning::Provenance failed for $name, retrying without it"
+                flags=(--access public)
+                continue
+              fi
+              echo "::error::Failed to publish $name"
+              echo "$output"
+              return 1
+            done
+          }
+
+          # shellcheck disable=SC2206
+          FILES=($PACKAGES)
+          [ "${#FILES[@]}" -gt 0 ] || { echo "::error::no package.json matches: $PACKAGES"; exit 1; }
+
+          for FILE in "${FILES[@]}"; do
+            if [ "$(jq -r '.private // false' "$FILE")" = true ]; then
+              echo "$FILE is private, skipping"
+              continue
+            fi
+            publish "$(dirname "$FILE")" "$(jq -r '.name' "$FILE")"
+          done

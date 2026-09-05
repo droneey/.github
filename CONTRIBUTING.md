@@ -13,7 +13,7 @@ One-line Conventional Commits, `type: Subject`, no body. The subject starts with
 Every workflow has to parse before it is pushed, because a broken reusable workflow breaks every repository that pins it:
 
 ```bash
-for file in .github/workflows/*.yml; do
+for file in .github/actions/*/action.yml .github/workflows/*.yml; do
   bunx --package @action-validator/cli action-validator "$file"
 done
 ```

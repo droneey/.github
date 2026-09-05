@@ -29,7 +29,7 @@ jobs:
       - name: ✅ Validate every workflow
         run: |
           set -euo pipefail
-          for file in .github/workflows/*.yml; do
+          for file in .github/actions/*/action.yml .github/workflows/*.yml; do
             [ -f "${file}" ] || continue
             echo "${file}"
             bunx --package @action-validator/cli action-validator "${file}"
