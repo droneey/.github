@@ -1,6 +1,6 @@
-# workflows
+# .github
 
-Reusable GitHub workflows shared by droneey repositories. Pin the floating major: `@v1`.
+The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin the floating major: `@v1`.
 
 ## ⚙️ Workflows
 
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   version:
     if: "!startsWith(github.event.head_commit.message, 'chore: Release v')"
-    uses: droneey/workflows/.github/workflows/cd-version.yml@v1
+    uses: droneey/.github/.github/workflows/cd-version.yml@v1
     permissions:
       contents: write
       pull-requests: read
@@ -43,7 +43,7 @@ on:
     tags: ['v*']
 jobs:
   release:
-    uses: droneey/workflows/.github/workflows/cd-release.yml@v1
+    uses: droneey/.github/.github/workflows/cd-release.yml@v1
     permissions:
       contents: write
 ```
@@ -66,7 +66,7 @@ on:
     tags: ['v*']
 jobs:
   pre-release:
-    uses: droneey/workflows/.github/workflows/cd-pre-release.yml@v1
+    uses: droneey/.github/.github/workflows/cd-pre-release.yml@v1
     permissions:
       contents: write
 ```
@@ -86,7 +86,7 @@ on:
     types: [released]
 jobs:
   deploy:
-    uses: droneey/workflows/.github/workflows/cd-deploy-npm.yml@v1
+    uses: droneey/.github/.github/workflows/cd-deploy-npm.yml@v1
     permissions:
       contents: read
       id-token: write

@@ -11,7 +11,7 @@ on:
 
 jobs:
   pre-release:
-    uses: droneey/workflows/.github/workflows/cd-release.yml@v1
+    uses: droneey/.github/.github/workflows/cd-release.yml@v1
     permissions:
       contents: write
     with:

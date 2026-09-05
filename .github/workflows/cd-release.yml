@@ -27,7 +27,7 @@ jobs:
 
       - name: 📝 Generate the changelog
         id: changelog
-        uses: droneey/workflows/.github/actions/changelog@v1
+        uses: droneey/.github/.github/actions/changelog@v1
         with:
           tag: ${{ github.ref_name }}
           packages: ${{ inputs.packages }}
