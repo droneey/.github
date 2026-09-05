@@ -10,5 +10,4 @@ jobs:
     permissions:
       contents: write
     with:
-      packages: package.json
       prerelease: true

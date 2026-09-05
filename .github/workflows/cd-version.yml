@@ -3,11 +3,11 @@ name: 🏷️ Version
 on:
   workflow_call:
     inputs:
-      packages:
-        description: 'Space-separated globs of the package.json files that receive the new version; the first one holds the current version'
+      version-command:
+        description: 'Shell run with VERSION set before tagging; it writes the version into the project files, and whatever it changed is committed. Empty tags the merge commit as it is'
         type: string
         required: false
-        default: package.json
+        default: ''
     secrets:
       token:
         description: 'A personal access token; a tag pushed with GITHUB_TOKEN does not trigger other workflows'
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           token: ${{ secrets.token || secrets.GH_TOKEN }}
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: 🔎 Determine bump type
         id: bump
@@ -57,8 +57,7 @@ jobs:
 
           case "$PREFIX" in
             feature) echo "type=minor" >> "$GITHUB_OUTPUT" ;;
-            fix|hotfix) echo "type=patch" >> "$GITHUB_OUTPUT" ;;
-            dependabot) echo "type=patch" >> "$GITHUB_OUTPUT" ;;
+            fix|hotfix|dependabot) echo "type=patch" >> "$GITHUB_OUTPUT" ;;
             *) echo "type=" >> "$GITHUB_OUTPUT" ;;
           esac
 
@@ -66,37 +65,36 @@ jobs:
         if: steps.bump.outputs.type
         env:
           BUMP: ${{ steps.bump.outputs.type }}
-          PACKAGES: ${{ inputs.packages || 'package.json' }}
+          VERSION_COMMAND: ${{ inputs.version-command }}
           BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          shopt -s nullglob
-          # shellcheck disable=SC2206
-          FILES=($PACKAGES)
-          [ "${#FILES[@]}" -gt 0 ] || { echo "::error::no package.json matches: $PACKAGES"; exit 1; }
-
-          CURRENT=$(jq -r '.version' "${FILES[0]}")
+          LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
+          CURRENT="${LATEST#v}"
+          [ -n "$CURRENT" ] || CURRENT="0.0.0"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
           if [ "$BUMP" = "minor" ]; then
             MINOR=$((MINOR + 1))
             PATCH=0
-          elif [ "$BUMP" = "patch" ]; then
+          else
             PATCH=$((PATCH + 1))
           fi
 
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-          echo "Bumping $CURRENT to $NEW_VERSION ($BUMP)"
-
-          for FILE in "${FILES[@]}"; do
-            jq --arg v "$NEW_VERSION" '.version = $v' "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE"
-          done
+          VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "Bumping $CURRENT to $VERSION ($BUMP)"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${FILES[@]}"
-          git commit -m "chore: Release v$NEW_VERSION" --no-verify
 
-          git pull --rebase origin "$BRANCH"
-          git tag "v$NEW_VERSION"
-          git push --atomic origin "HEAD:$BRANCH" "v$NEW_VERSION"
+          if [ -n "$VERSION_COMMAND" ]; then
+            VERSION="$VERSION" bash -euo pipefail -c "$VERSION_COMMAND"
+            if ! git diff --quiet; then
+              git add -u
+              git commit -m "chore: Release v$VERSION" --no-verify
+              git pull --rebase origin "$BRANCH"
+            fi
+          fi
+
+          git tag "v$VERSION"
+          git push --atomic origin "HEAD:$BRANCH" "v$VERSION"

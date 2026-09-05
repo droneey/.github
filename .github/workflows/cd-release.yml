@@ -3,11 +3,6 @@ name: 🔖 Release
 on:
   workflow_call:
     inputs:
-      packages:
-        description: 'Space-separated globs of the package.json files listed in the release notes; empty leaves the section out'
-        type: string
-        required: false
-        default: ''
       prerelease:
         description: 'Open the release as a pre-release, to be promoted by hand'
         type: boolean
@@ -30,24 +25,11 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
           REPO: ${{ github.repository }}
-          PACKAGES: ${{ inputs.packages }}
         run: |
           set -euo pipefail
-          shopt -s nullglob
           PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p' || true)
 
           BODY=""
-          # shellcheck disable=SC2206
-          FILES=($PACKAGES)
-          if [ "${#FILES[@]}" -gt 0 ]; then
-            BODY="## Packages"$'\n\n'
-            for FILE in "${FILES[@]}"; do
-              NAME=$(jq -r '.name' "$FILE")
-              VERSION=$(jq -r '.version' "$FILE")
-              BODY="${BODY}- \`${NAME}@${VERSION}\`"$'\n'
-            done
-            BODY="${BODY}"$'\n'
-          fi
 
           if [ -n "$PREV_TAG" ]; then
             RANGE="${PREV_TAG}..${TAG}"
