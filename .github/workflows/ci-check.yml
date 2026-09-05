@@ -21,16 +21,8 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v7
 
-      - name: 📦 Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.2
-
-      - name: ✅ Validate every workflow
+      - name: ✅ Lint the workflows
         run: |
           set -euo pipefail
-          for file in .github/actions/*/action.yml .github/workflows/*.yml; do
-            [ -f "${file}" ] || continue
-            echo "${file}"
-            bunx --package @action-validator/cli action-validator "${file}"
-          done
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12 "${RUNNER_TEMP}"
+          "${RUNNER_TEMP}/actionlint" -color
