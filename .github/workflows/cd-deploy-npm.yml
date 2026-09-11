@@ -15,8 +15,8 @@ on:
         default: '24'
     secrets:
       npm_token:
-        description: 'An npm automation token with publish rights'
-        required: true
+        description: 'A publish token; leave it out to publish through trusted publishing, which needs a trusted publisher for the calling workflow on npmjs.com'
+        required: false
 
 jobs:
   deploy:
@@ -35,7 +35,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: ${{ inputs.node-version }}
-          registry-url: https://registry.npmjs.org
 
       - name: 📦 Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -72,6 +71,20 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
+
+          if [ -n "${NODE_AUTH_TOKEN:-}" ]; then
+            export NPM_CONFIG_USERCONFIG="${RUNNER_TEMP}/npmrc"
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > "$NPM_CONFIG_USERCONFIG"
+            echo "Publishing with the token"
+          else
+            REQUIRED=11.5.1
+            CURRENT=$(npm --version)
+            if [ "$(printf '%s\n%s\n' "$REQUIRED" "$CURRENT" | sort -V | head -1)" != "$REQUIRED" ]; then
+              echo "::error::Trusted publishing needs npm $REQUIRED or newer, this runner has $CURRENT"
+              exit 1
+            fi
+            echo "Publishing through trusted publishing with npm $CURRENT"
+          fi
 
           publish() {
             local dir="$1" name="$2" attempt output

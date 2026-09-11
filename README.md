@@ -84,7 +84,7 @@ jobs:
 
 ### 📤 cd-deploy-npm
 
-One deploy target among those a repository may pick. Builds every matched package that has a `build` script, then publishes every one that is not `private`. Provenance is attempted first and dropped on refusal, and a version already on the registry is a skip rather than a failure.
+One deploy target among those a repository may pick. Builds every matched package that has a `build` script, then publishes every one that is not `private`. Without a token it publishes through npm's trusted publishing: the job's OIDC token is exchanged for a short-lived publish credential, so no secret exists to leak or expire. Provenance is attempted first and dropped on refusal, and a version already on the registry is a skip rather than a failure.
 
 ```yaml
 name: 🚀 Deploy
@@ -97,15 +97,15 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    secrets:
-      npm_token: ${{ secrets.NPM_TOKEN }}
 ```
 
 | Input / secret | Default | Meaning |
 |---|---|---|
 | `packages` | `package.json` | Space-separated globs of the `package.json` files to build and publish |
-| `node-version` | `24` | The Node version that publishes |
-| `npm_token` | required | An npm automation token with publish rights |
+| `node-version` | `24` | The Node version that publishes; trusted publishing needs the npm it ships to be 11.5.1 or newer |
+| `npm_token` | none | A publish token, only for a registry without trusted publishing or the first version of a package that does not exist yet |
+
+On npmjs.com every package carries a trusted publisher: GitHub Actions, organisation `droneey`, the repository, and the file name of the **calling** workflow, `cd-deploy.yml`, with no environment. A brand-new package is published once by hand, then gets its trusted publisher like the others.
 
 ## 🔄 Renovate
 
