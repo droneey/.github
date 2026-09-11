@@ -1,6 +1,6 @@
 # .github
 
-The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin an exact release, for example `@v2.0.0`; Dependabot opens the pull request when a newer one exists. Releases are immutable, nothing here is retagged.
+The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin an exact release, for example `@v2.0.0`; Renovate opens the pull request when a newer one exists. Releases are immutable, nothing here is retagged.
 
 The core knows only git and shell. The version is the latest `vX.Y.Z` tag, release notes come from the commit subjects, and the only place a language appears is a deploy workflow for a specific target.
 
@@ -8,7 +8,7 @@ The core knows only git and shell. The version is the latest `vX.Y.Z` tag, relea
 
 ### 🏷️ cd-version
 
-Push to `main`: the merged branch prefix decides the bump (`feature/*` minor, `fix/*`, `hotfix/*` and `dependabot/*` patch), the next version is computed from the latest tag, and the tag is pushed. A repository that keeps the version in its own files hands over one command; what it changes is committed as `chore: Release vX.Y.Z` before the tag.
+Push to `main`: the merged branch prefix decides the bump (`feature/*` minor; `fix/*`, `hotfix/*`, `renovate/*` and `dependabot/*` patch), the next version is computed from the latest tag, and the tag is pushed. A repository that keeps the version in its own files hands over one command; what it changes is committed as `chore: Release vX.Y.Z` before the tag.
 
 ```yaml
 name: 🏷️ Version
@@ -106,6 +106,20 @@ jobs:
 | `packages` | `package.json` | Space-separated globs of the `package.json` files to build and publish |
 | `node-version` | `24` | The Node version that publishes |
 | `npm_token` | required | An npm automation token with publish rights |
+
+## 🔄 Renovate
+
+`default.json` is the fleet's Renovate preset: one weekly pull request per repository for the minor and patch updates, one per major, the lockfile refreshed weekly, `chore: Update …` commits in the fleet's format, caret ranges bumped. A repository opts in with one file:
+
+```json
+// renovate.json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>droneey/.github"]
+}
+```
+
+`renovate-config.json` points at the same preset, so a repository Renovate onboards on its own gets it too. The Renovate GitHub App is installed once on the organisation.
 
 ## 📄 License
 
