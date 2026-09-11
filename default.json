@@ -1,12 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "The dependency updates of droneey: on the first day of each month one pull request per repository for the minor and patch updates, one per major, the lockfile refreshed the same day, commits in the fleet's format.",
+  "description": "The dependency updates of droneey: on the first day of each month, between 10:00 and 18:00 Warsaw time, one pull request per repository for the minor and patch updates, one per major, the lockfile refreshed the same day, commits in the fleet's format.",
   "extends": [
     "config:recommended",
     "group:allNonMajor"
   ],
   "schedule": [
-    "* 0-10 1 * *"
+    "* 10-17 1 * *"
   ],
   "timezone": "Europe/Warsaw",
   "semanticCommits": "enabled",
@@ -17,7 +17,7 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": [
-      "* 0-10 1 * *"
+      "* 10-17 1 * *"
     ]
   },
   "packageRules": [
