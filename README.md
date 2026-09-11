@@ -109,7 +109,7 @@ jobs:
 
 ## 🔄 Renovate
 
-`default.json` is the fleet's Renovate preset: one weekly pull request per repository for the minor and patch updates, one per major, the lockfile refreshed weekly, `chore: Update …` commits in the fleet's format, caret ranges bumped. A repository opts in with one file:
+`default.json` is the fleet's Renovate preset: on the first day of each month, in the morning Warsaw time, one pull request per repository for the minor and patch updates, one per major, the lockfile refreshed the same day; `chore: Update …` commits in the fleet's format, caret ranges bumped. Security updates ignore the schedule, and the Dependency Dashboard issue of a repository triggers any update on demand. A repository opts in with one file:
 
 ```json
 // renovate.json

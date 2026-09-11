@@ -1,27 +1,36 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "The dependency updates of droneey: one weekly pull request per repository for the minor and patch updates, one per major, the lockfile refreshed weekly, commits in the fleet's format.",
+  "description": "The dependency updates of droneey: on the first day of each month one pull request per repository for the minor and patch updates, one per major, the lockfile refreshed the same day, commits in the fleet's format.",
   "extends": [
     "config:recommended",
-    "group:allNonMajor",
-    "schedule:weekly"
+    "group:allNonMajor"
   ],
-  "timezone": "Europe/Kyiv",
+  "schedule": [
+    "* 0-10 1 * *"
+  ],
+  "timezone": "Europe/Warsaw",
   "semanticCommits": "enabled",
   "semanticCommitType": "chore",
   "semanticCommitScope": null,
   "commitMessageLowerCase": "never",
   "rangeStrategy": "bump",
   "lockFileMaintenance": {
-    "enabled": true
+    "enabled": true,
+    "schedule": [
+      "* 0-10 1 * *"
+    ]
   },
   "packageRules": [
     {
-      "matchPackageNames": ["*"],
+      "matchPackageNames": [
+        "*"
+      ],
       "semanticCommitType": "chore"
     },
     {
-      "matchDepTypes": ["peerDependencies"],
+      "matchDepTypes": [
+        "peerDependencies"
+      ],
       "rangeStrategy": "widen"
     }
   ]
