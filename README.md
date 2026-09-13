@@ -60,13 +60,14 @@ jobs:
       contents: write
 ```
 
-| Input | Default | Meaning |
+| Input / secret | Default | Meaning |
 |---|---|---|
 | `prerelease` | `false` | Open it as a pre-release, to be promoted by hand |
+| `token` | `GITHUB_TOKEN` | A personal access token; a release opened with it starts other workflows, which one opened with `GITHUB_TOKEN` does not |
 
 ### 🔖 cd-pre-release
 
-A repository's `cd-pre-release.yml` calls `cd-release.yml` with `prerelease: true`: the tag opens a pre-release, a human promotes it, and the promotion triggers the repository's `cd-deploy`.
+A repository's `cd-pre-release.yml` calls `cd-release.yml` with `prerelease: true`: the tag opens a pre-release, a human promotes it, and the promotion triggers the repository's `cd-deploy`. With `token`, the pre-release itself starts workflows too, so a staging deploy can run on `release: prereleased`.
 
 ```yaml
 name: 🔖 Pre-release
@@ -80,6 +81,8 @@ jobs:
       contents: write
     with:
       prerelease: true
+    secrets:
+      token: ${{ secrets.GH_TOKEN }}
 ```
 
 ### 📤 cd-deploy-npm
