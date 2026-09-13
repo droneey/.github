@@ -8,6 +8,10 @@ on:
         type: boolean
         required: false
         default: false
+    secrets:
+      token:
+        description: 'A personal access token; events of a release opened with it start other workflows, which GITHUB_TOKEN does not'
+        required: false
 
 jobs:
   release:
@@ -60,7 +64,7 @@ jobs:
           TAG: ${{ github.ref_name }}
           BODY: ${{ steps.changelog.outputs.body }}
           PRERELEASE: ${{ inputs.prerelease }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.token || github.token }}
         run: |
           set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
