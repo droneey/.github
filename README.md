@@ -67,7 +67,7 @@ jobs:
 
 ### 🔖 cd-pre-release
 
-A repository's `cd-pre-release.yml` calls `cd-release.yml` with `prerelease: true`: the tag opens a pre-release, a human promotes it, and the promotion triggers the repository's `cd-deploy`. With `token`, the pre-release itself starts workflows too, so a staging deploy can run on `release: prereleased`.
+A repository's `cd-pre-release.yml` calls `cd-release.yml` with `prerelease: true`: the tag opens a pre-release, a human promotes it, and the promotion triggers the repository's `cd-deploy`. Pass `token: ${{ secrets.GH_TOKEN }}` only when the pre-release itself has to start a workflow, such as a staging deploy on `release: prereleased`; a promotion is a human's event and starts the deploy without it.
 
 ```yaml
 name: 🔖 Pre-release
@@ -81,8 +81,6 @@ jobs:
       contents: write
     with:
       prerelease: true
-    secrets:
-      token: ${{ secrets.GH_TOKEN }}
 ```
 
 ### 📤 cd-deploy-npm
