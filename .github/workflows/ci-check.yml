@@ -21,7 +21,7 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v7
 
-      - name: ✅ Lint the workflows
+      - name: ☑️ Lint the workflows
         run: |
           set -euo pipefail
           bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12 "${RUNNER_TEMP}"
