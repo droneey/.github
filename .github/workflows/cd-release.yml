@@ -19,12 +19,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
-      - name: 📝 Generate the changelog
+      - name: Generate the changelog
         id: changelog
         env:
           TAG: ${{ github.ref_name }}
@@ -59,7 +59,7 @@ jobs:
             echo "${DELIM}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: 🔖 Open or update the release
+      - name: Open or update the release
         env:
           TAG: ${{ github.ref_name }}
           BODY: ${{ steps.changelog.outputs.body }}
