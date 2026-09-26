@@ -1,0 +1,19 @@
+version: 1
+
+wordmark:
+  - .github
+tagline: Our foundation for every repository
+accent: neutral
+motif: |
+  <circle cx="16" cy="48" r="16"/>
+  <circle cx="84" cy="12" r="12"/>
+  <circle cx="84" cy="48" r="12"/>
+  <circle cx="84" cy="84" r="12"/>
+  <path d="M24 48C48 48 48 12 76 12M24 48H76M24 48C48 48 48 84 76 84" fill="none" stroke="url(#motif)" stroke-width="8" stroke-linecap="round"/>
+badges:
+  made-for:
+    label: made for
+    value: GitHub Actions
+  license:
+    label: license
+    value: MIT
