@@ -1,4 +1,4 @@
-name: 📤 Deploy to npm
+name: 🚀 Deploy to npm
 
 on:
   workflow_call:
@@ -25,26 +25,26 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.release.tag_name || github.ref }}
           fetch-depth: 0
 
-      - name: 🟢 Setup Node
+      - name: Setup Node
         uses: actions/setup-node@v7.0.0
         with:
           node-version: ${{ inputs.node-version }}
 
-      - name: 📦 Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.2
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: 🏗️ Build the packages
+      - name: Build the packages
         env:
           PACKAGES: ${{ inputs.packages }}
         run: |
@@ -64,7 +64,7 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: 📤 Publish to npm
+      - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
           PACKAGES: ${{ inputs.packages }}

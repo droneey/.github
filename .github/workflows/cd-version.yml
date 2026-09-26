@@ -26,13 +26,13 @@ jobs:
       contents: write
       pull-requests: read
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v7.0.1
         with:
           token: ${{ secrets.token || secrets.GH_TOKEN }}
           fetch-depth: 0
 
-      - name: 🔎 Determine bump type
+      - name: Determine bump type
         id: bump
         env:
           GH_TOKEN: ${{ github.token }}
@@ -61,7 +61,7 @@ jobs:
             *) echo "type=" >> "$GITHUB_OUTPUT" ;;
           esac
 
-      - name: 🏷️ Bump version and tag
+      - name: Bump version and tag
         if: steps.bump.outputs.type
         env:
           BUMP: ${{ steps.bump.outputs.type }}
