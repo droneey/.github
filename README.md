@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src=".brand/badges/made-for.svg" alt="Made for GitHub Actions">&ensp;<a href="LICENSE.md"><img src=".brand/badges/license.svg" alt="License: MIT"></a>
+  <a href="LICENSE.md"><img src=".brand/badges/license.svg" alt="License: MIT"></a>
 </p>
 
 ## <img src=".brand/diamond.svg" width="18" height="18" alt=""> What’s inside
