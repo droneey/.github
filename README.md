@@ -1,27 +1,59 @@
-# .github
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".brand/banner-dark.svg">
+    <img src=".brand/banner-light.svg" alt="Droneey .github — Our foundation for every repository" width="100%">
+  </picture>
+</p>
 
-The organisation defaults of droneey: reusable GitHub workflows, and the community files every repository inherits. Pin an exact release, for example `@v2.0.0`; Renovate opens the pull request when a newer one exists. Releases are immutable, nothing here is retagged.
+<p align="center">
+  <img src=".brand/badges/made-for.svg" alt="Made for GitHub Actions">&ensp;<a href="LICENSE.md"><img src=".brand/badges/license.svg" alt="License: MIT"></a>
+</p>
 
-The core knows only git and shell. The version is the latest `vX.Y.Z` tag, release notes come from the commit subjects, and the only place a language appears is a deploy workflow for a specific target.
+## <img src=".brand/diamond.svg" width="18" height="18" alt=""> What’s inside
 
-## ⚙️ Workflows
+| Part | File | Does |
+|---|---|---|
+| **Workflows** | [`cd-version`](.github/workflows/cd-version.yml) | Tags each merge to `main`; the branch prefix sets the bump |
+| | [`cd-release`](.github/workflows/cd-release.yml) | Opens the release of a tag, with its `feat` and `fix` commits as notes |
+| | [`cd-deploy-npm`](.github/workflows/cd-deploy-npm.yml) | Builds the packages and publishes them to npm |
+| **Renovate** | [`default.json`](default.json) | Monthly dependency updates in the fleet’s commit format |
+| **Community** | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How a change reaches `main` |
+| | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability |
+| | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Contributor Covenant 3.0 |
+| | [`ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE) | The bug report and feature request forms |
+| | [`PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | The pull request checklist |
 
-### 🏷️ cd-version
+## <img src=".brand/diamond.svg" width="18" height="18" alt=""> How it works
 
-Push to `main`: the merged branch prefix decides the bump (`feature/*` minor; `fix/*`, `hotfix/*`, `renovate/*` and `dependabot/*` patch), the next version is computed from the latest tag, and the tag is pushed. A repository that keeps the version in its own files hands over one command; what it changes is committed as `chore: Release vX.Y.Z` before the tag.
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#F4F4F5", "primaryBorderColor": "#D4D4D8", "primaryTextColor": "#18181B", "lineColor": "#A1A1AA"}}}%%
+flowchart LR
+  merge["Merge to main"] --> version["cd-version<br/>tags vX.Y.Z"]
+  version --> release["cd-release<br/>opens a pre-release"]
+  release --> promote["Promotion<br/>by hand"]
+  promote --> deploy(["cd-deploy-*<br/>ships the release"])
+  classDef accent fill:#52525B,stroke:#71717A,stroke-width:2px,color:#FFFFFF
+  class deploy accent
+```
+
+A repository calls these from its own `.github/workflows`, one file per stage.
+
+> [!IMPORTANT]
+> Pin an exact release, as the examples do. Releases are immutable and never retagged; Renovate opens the pull request for a newer one.
+
+## <img src=".brand/diamond.svg" width="18" height="18" alt=""> Workflows
+
+### cd-version
+
+Tags each merge to `main` with the next `vX.Y.Z`. The merged branch sets the bump: `feature/*` the minor; `fix/*`, `hotfix/*` and dependency updates the patch. What `version-command` changes is committed as `chore: Release vX.Y.Z` before the tag; without it, the merge commit itself is tagged.
 
 ```yaml
-name: 🏷️ Version
 on:
   push:
     branches: [main]
-concurrency:
-  group: version
-  cancel-in-progress: false
 jobs:
   version:
-    if: "!startsWith(github.event.head_commit.message, 'chore: Release v')"
-    uses: droneey/.github/.github/workflows/cd-version.yml@v2.0.0
+    uses: droneey/.github/.github/workflows/cd-version.yml@v2.3.3
     permissions:
       contents: write
       pull-requests: read
@@ -31,10 +63,14 @@ jobs:
       token: ${{ secrets.GH_TOKEN }}
 ```
 
-| Input / secret | Default | Meaning |
+| Name | Default | Meaning |
 |---|---|---|
-| `version-command` | empty | Shell run with `VERSION` set before the tag; its changes become the release commit. Empty tags the merge commit as it is |
-| `token` | required | A personal access token, because a tag pushed with `GITHUB_TOKEN` starts no other workflow |
+| `version-command` | none | Writes `$VERSION` into the project files |
+| `token` | required | A personal access token, so the tag starts other workflows |
+
+<details>
+<summary><code>version-command</code> per stack</summary>
+<br>
 
 | Stack | `version-command` |
 |---|---|
@@ -42,86 +78,93 @@ jobs:
 | JavaScript, workspaces | `for f in package.json packages/*/package.json; do jq --arg v "$VERSION" '.version = $v' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done` |
 | Python | `uv version "$VERSION"` |
 | Rust | `cargo set-version "$VERSION"` |
-| Go, infrastructure | none: the tag is the version |
+| Go, infrastructure | None: the tag is the version |
 
-### 🔖 cd-release
+</details>
 
-Opens the GitHub release for the tag that triggered it, with the `feat` and `fix` subjects since the previous tag as notes. A second run edits the release instead of failing.
+### cd-release
 
-```yaml
-name: 🔖 Release
-on:
-  push:
-    tags: ['v*']
-jobs:
-  release:
-    uses: droneey/.github/.github/workflows/cd-release.yml@v2.0.0
-    permissions:
-      contents: write
-```
-
-| Input / secret | Default | Meaning |
-|---|---|---|
-| `prerelease` | `false` | Open it as a pre-release, to be promoted by hand |
-| `token` | `GITHUB_TOKEN` | A personal access token; a release opened with it starts other workflows, which one opened with `GITHUB_TOKEN` does not |
-
-### 🔖 cd-pre-release
-
-A repository's `cd-pre-release.yml` calls `cd-release.yml` with `prerelease: true`: the tag opens a pre-release, a human promotes it, and the promotion triggers the repository's `cd-deploy`. Pass `token: ${{ secrets.GH_TOKEN }}` only when the pre-release itself has to start a workflow, such as a staging deploy on `release: prereleased`; a promotion is a human's event and starts the deploy without it.
+Opens the GitHub release of the pushed tag, with the `feat` and `fix` commits since the previous tag as notes; a rerun edits it. The fleet opens pre-releases and promotes them by hand. A promotion starts the deploy without a `token`; pass one only when the pre-release itself must start a workflow, such as a staging deploy on `release: prereleased`.
 
 ```yaml
-name: 🔖 Pre-release
 on:
   push:
     tags: ['v*']
 jobs:
   pre-release:
-    uses: droneey/.github/.github/workflows/cd-release.yml@v2.0.0
+    uses: droneey/.github/.github/workflows/cd-release.yml@v2.3.3
     permissions:
       contents: write
     with:
       prerelease: true
 ```
 
-### 📤 cd-deploy-npm
+| Name | Default | Meaning |
+|---|---|---|
+| `prerelease` | `false` | Opens a pre-release, to be promoted by hand |
+| `token` | `GITHUB_TOKEN` | A personal access token, so the release starts other workflows |
 
-One deploy target among those a repository may pick. Builds every matched package that has a `build` script, then publishes every one that is not `private`. Without a token it publishes through npm's trusted publishing: the job's OIDC token is exchanged for a short-lived publish credential, so no secret exists to leak or expire. Provenance is attempted first and dropped on refusal, and a version already on the registry is a skip rather than a failure.
+### cd-deploy-npm
+
+A `cd-deploy-<target>` workflow ships a promoted release, and a repository’s `cd-deploy.yml` calls the one it needs. This one builds every matched package that has a `build` script and publishes every one that is not `private`. Without a token it uses npm’s trusted publishing, so there is no secret to leak or expire; a version already on the registry is skipped.
 
 ```yaml
-name: 🚀 Deploy
 on:
   release:
     types: [released]
 jobs:
   deploy:
-    uses: droneey/.github/.github/workflows/cd-deploy-npm.yml@v2.0.0
+    uses: droneey/.github/.github/workflows/cd-deploy-npm.yml@v2.3.3
     permissions:
       contents: read
       id-token: write
 ```
 
-| Input / secret | Default | Meaning |
+| Name | Default | Meaning |
 |---|---|---|
-| `packages` | `package.json` | Space-separated globs of the `package.json` files to build and publish |
-| `node-version` | `24` | The Node version that publishes; trusted publishing needs the npm it ships to be 11.5.1 or newer |
-| `npm_token` | none | A publish token, only for a registry without trusted publishing or the first version of a package that does not exist yet |
+| `packages` | `package.json` | Space-separated globs of the `package.json` files to publish |
+| `node-version` | `24` | The Node that publishes; trusted publishing needs npm 11.5.1 or newer |
+| `npm_token` | none | A publish token, for a registry without trusted publishing |
 
-On npmjs.com every package carries a trusted publisher: GitHub Actions, organisation `droneey`, the repository, and the file name of the **calling** workflow, `cd-deploy.yml`, with no environment. A brand-new package is published once by hand, then gets its trusted publisher like the others.
+> [!NOTE]
+> Each package on npmjs.com names its trusted publisher: GitHub Actions, organisation `droneey`, its repository and the calling workflow, `cd-deploy.yml`, with no environment. A new package is published once by hand, then gets the same.
 
-## 🔄 Renovate
+## <img src=".brand/diamond.svg" width="18" height="18" alt=""> Renovate
 
-`default.json` is the fleet's Renovate preset: on the first day of each month, between 10:00 and 18:00 Warsaw time, one pull request per repository for the minor and patch updates, one per major, the lockfile refreshed the same day; `chore: Update …` commits in the fleet's format, caret ranges bumped. Security updates ignore the schedule, and the Dependency Dashboard issue of a repository triggers any update on demand. A repository opts in with one file:
+`default.json` is the fleet’s preset. On the first day of each month, 10:00–18:00 Warsaw time, it opens one pull request for the minor and patch updates and one per major, and refreshes the lockfile; commits read `chore: Update …` and ranges are bumped. Security updates skip the schedule, and the Dependency Dashboard issue starts any update on demand.
+
+A repository opts in with its `renovate.json`:
 
 ```json
-// renovate.json
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>droneey/.github"]
 }
 ```
 
-`renovate-config.json` points at the same preset, so a repository Renovate onboards on its own gets it too. The Renovate GitHub App is installed once on the organisation.
+`renovate-config.json` hands the same preset to every repository Renovate onboards. The Renovate app is installed once, on the organisation.
 
-## 📄 License
+## <img src=".brand/diamond.svg" width="18" height="18" alt=""> Community files
 
-MIT
+Every repository without its own copy uses these: as tabs beside its README, and as its issue forms and pull request template. A file of the same name in the repository replaces the default, and any file in its own `.github/ISSUE_TEMPLATE` replaces every form.
+
+`SECURITY.md` sends reports to GitHub’s private vulnerability reporting, which has to be on in each public repository.
+
+<details>
+<summary><b>Development</b></summary>
+<br>
+
+```bash
+actionlint
+```
+
+| Convention | Rule |
+|---|---|
+| Branch | `feature/<taskId>-<name>`, `fix/…` or `hotfix/…` |
+| Commit | One line: `type: Subject` |
+| Check | `actionlint`, the same as CI |
+| Workflow | A new input or secret gets its row in this README |
+| Community file | True for every repository, with nothing specific to this one |
+| Release | Every merge tags the next version; nothing is retagged |
+
+</details>

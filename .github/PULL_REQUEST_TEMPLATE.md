@@ -1,10 +1,12 @@
-## What
+Closes #
 
-<!-- One paragraph: what changes and why. Link the issue if there is one. -->
+## Why
+
+<!-- What the change does and why it is needed. -->
 
 ## Checklist
 
-- [ ] Branch is `feature/*`, `fix/*` or `hotfix/*`
-- [ ] Commits are one-line Conventional Commits
-- [ ] Checks pass locally
-- [ ] Docs updated where behaviour changed
+- [ ] Branch `feature/<taskId>-<name>`, `fix/…` or `hotfix/…`
+- [ ] Title in the commit format, `type: Subject`
+- [ ] The check passes locally
+- [ ] Docs follow the change

@@ -1,4 +1,4 @@
-name: 🐛 Bug report
+name: Bug report
 description: Something behaves differently from what the docs say
 labels: [bug]
 body:
@@ -22,7 +22,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: The `@vX` ref you pin
+      description: The release tag or the commit
+      placeholder: v1.2.3 or 1a2b3c4
     validations:
       required: true
   - type: textarea
