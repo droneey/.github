@@ -102,7 +102,18 @@ jobs:
 | Name | Default | Meaning |
 |---|---|---|
 | `prerelease` | `false` | Opens a pre-release, to be promoted by hand |
+| `assets-command` | none | Builds, from the tag, the files named in `assets` |
+| `assets` | none | Space-separated files attached when the release opens, replaced on a rerun |
 | `token` | `GITHUB_TOKEN` | A personal access token, so the release starts other workflows |
+
+A release that carries files builds and attaches them as it opens, so it never exists without them:
+
+```yaml
+    with:
+      prerelease: true
+      assets-command: tar -czf configs.tar.gz -C packages common && sha256sum configs.tar.gz > configs.tar.gz.sha256
+      assets: configs.tar.gz configs.tar.gz.sha256
+```
 
 ### cd-deploy-npm
 
