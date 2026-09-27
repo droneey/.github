@@ -8,6 +8,16 @@ on:
         type: boolean
         required: false
         default: false
+      assets-command:
+        description: 'Shell run from the tag before the release opens; it builds the files named in assets. Empty builds nothing'
+        type: string
+        required: false
+        default: ''
+      assets:
+        description: 'Space-separated files attached to the release when it opens, and replaced when a rerun edits it. Empty attaches nothing'
+        type: string
+        required: false
+        default: ''
     secrets:
       token:
         description: 'A personal access token; events of a release opened with it start other workflows, which GITHUB_TOKEN does not'
@@ -59,16 +69,27 @@ jobs:
             echo "${DELIM}"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Build the assets
+        if: inputs.assets-command != ''
+        env:
+          ASSETS_COMMAND: ${{ inputs.assets-command }}
+        run: bash -euo pipefail -c "$ASSETS_COMMAND"
+
       - name: Open or update the release
         env:
           TAG: ${{ github.ref_name }}
           BODY: ${{ steps.changelog.outputs.body }}
           PRERELEASE: ${{ inputs.prerelease }}
+          ASSETS: ${{ inputs.assets }}
           GH_TOKEN: ${{ secrets.token || github.token }}
         run: |
           set -euo pipefail
+          read -r -a FILES <<< "$ASSETS"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --title "$TAG" --notes "$BODY" --prerelease="$PRERELEASE"
+            if [ -n "$ASSETS" ]; then
+              gh release upload "$TAG" "${FILES[@]}" --clobber
+            fi
           else
-            gh release create "$TAG" --title "$TAG" --notes "$BODY" --prerelease="$PRERELEASE"
+            gh release create "$TAG" --title "$TAG" --notes "$BODY" --prerelease="$PRERELEASE" ${FILES[@]+"${FILES[@]}"}
           fi
