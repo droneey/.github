@@ -1,0 +1,3 @@
+extends:
+  - .devkit/common/lefthook/base.yaml
+  - .devkit/common/lefthook/betterleaks.yaml

@@ -1,4 +1,4 @@
 paths:
-  .github/workflows/cd-version.yml:
+  .github/workflows/cd-version.yaml:
     ignore:
       - 'property "gh_token" is not defined'

@@ -13,9 +13,9 @@
 
 | Part | File | Does |
 |---|---|---|
-| **Workflows** | [`cd-version`](.github/workflows/cd-version.yml) | Tags each merge to `main`; the branch prefix sets the bump |
-| | [`cd-release`](.github/workflows/cd-release.yml) | Opens the release of a tag, with its `feat` and `fix` commits as notes |
-| | [`cd-deploy-npm`](.github/workflows/cd-deploy-npm.yml) | Builds the packages and publishes them to npm |
+| **Workflows** | [`cd-version`](.github/workflows/cd-version.yaml) | Tags each merge to `main`; the branch prefix sets the bump |
+| | [`cd-release`](.github/workflows/cd-release.yaml) | Opens the release of a tag, with its `feat` and `fix` commits as notes |
+| | [`cd-deploy-npm`](.github/workflows/cd-deploy-npm.yaml) | Builds the packages and publishes them to npm |
 | **Renovate** | [`default.json`](default.json) | Monthly dependency updates in the fleet’s commit format |
 | **Community** | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How a change reaches `main` |
 | | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability |
@@ -53,7 +53,7 @@ on:
     branches: [main]
 jobs:
   version:
-    uses: droneey/.github/.github/workflows/cd-version.yml@v2.3.3
+    uses: droneey/.github/.github/workflows/cd-version.yaml@v2.3.3
     permissions:
       contents: write
       pull-requests: read
@@ -92,7 +92,7 @@ on:
     tags: ['v*']
 jobs:
   pre-release:
-    uses: droneey/.github/.github/workflows/cd-release.yml@v2.3.3
+    uses: droneey/.github/.github/workflows/cd-release.yaml@v2.3.3
     permissions:
       contents: write
     with:
@@ -117,7 +117,7 @@ A release that carries files builds and attaches them as it opens, so it never e
 
 ### cd-deploy-npm
 
-A `cd-deploy-<target>` workflow ships a promoted release, and a repository’s `cd-deploy.yml` calls the one it needs. This one builds every matched package that has a `build` script and publishes every one that is not `private`. Without a token it uses npm’s trusted publishing, so there is no secret to leak or expire; a version already on the registry is skipped.
+A `cd-deploy-<target>` workflow ships a promoted release, and a repository’s `cd-deploy.yaml` calls the one it needs. This one builds every matched package that has a `build` script and publishes every one that is not `private`. Without a token it uses npm’s trusted publishing, so there is no secret to leak or expire; a version already on the registry is skipped.
 
 ```yaml
 on:
@@ -125,7 +125,7 @@ on:
     types: [released]
 jobs:
   deploy:
-    uses: droneey/.github/.github/workflows/cd-deploy-npm.yml@v2.3.3
+    uses: droneey/.github/.github/workflows/cd-deploy-npm.yaml@v2.3.3
     permissions:
       contents: read
       id-token: write
@@ -138,7 +138,7 @@ jobs:
 | `npm_token` | none | A publish token, for a registry without trusted publishing |
 
 > [!NOTE]
-> Each package on npmjs.com names its trusted publisher: GitHub Actions, organisation `droneey`, its repository and the calling workflow, `cd-deploy.yml`, with no environment. A new package is published once by hand, then gets the same.
+> Each package on npmjs.com names its trusted publisher: GitHub Actions, organisation `droneey`, its repository and the calling workflow, `cd-deploy.yaml`, with no environment. A new package is published once by hand, then gets the same.
 
 ## <img src=".brand/diamond.svg" width="18" height="18" alt=""> Renovate
 
@@ -166,7 +166,8 @@ Every repository without its own copy uses these: as tabs beside its README, and
 <br>
 
 ```bash
-actionlint
+mise install    # the tools, devkit's archive as .devkit, the git hooks
+mise run check  # actionlint, betterleaks, ls-lint
 ```
 
 | Convention | Rule |
