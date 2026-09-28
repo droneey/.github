@@ -1,0 +1,5 @@
+ls:
+  .yml: regex:^$
+ignore:
+  - .github/ISSUE_TEMPLATE
+  - .github/CODEOWNERS

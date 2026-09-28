@@ -6,7 +6,7 @@ on:
 
 jobs:
   pre-release:
-    uses: ./.github/workflows/cd-release.yml
+    uses: ./.github/workflows/cd-release.yaml
     permissions:
       contents: write
     with:
