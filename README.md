@@ -142,7 +142,7 @@ jobs:
 
 ## <img src=".brand/diamond.svg" width="18" height="18" alt=""> Renovate
 
-`default.json` is the fleet’s preset. On the first day of each month, 10:00–18:00 Warsaw time, it opens one pull request for the minor and patch updates and one per major, and refreshes the lockfile; commits read `chore: Update …` and ranges are bumped. Security updates skip the schedule, and the Dependency Dashboard issue starts any update on demand.
+`default.json` is the fleet’s preset. On the first day of each month, 10:00–18:00 Warsaw time, it opens one pull request for the minor and patch updates and one per major, and refreshes the lockfile; commits read `chore: Update …` and ranges are bumped. A release is proposed only once it is three days old; security updates skip both the schedule and the wait, and the Dependency Dashboard issue starts any update on demand. GitHub Actions steps are pinned by commit hash, with their version in a comment beside it, and updated together.
 
 A repository opts in with its `renovate.json`:
 
