@@ -103,6 +103,7 @@ jobs:
 |---|---|---|
 | `prerelease` | `false` | Opens a pre-release, to be promoted by hand |
 | `assets-command` | none | Builds, from the tag, the files named in `assets` |
+| `assets-artifact` | none | Downloads, before the release opens, the artifacts a job of the caller uploaded |
 | `assets` | none | Space-separated files attached when the release opens, replaced on a rerun |
 | `token` | `GITHUB_TOKEN` | A personal access token, so the release starts other workflows |
 
@@ -113,6 +114,31 @@ A release that carries files builds and attaches them as it opens, so it never e
       prerelease: true
       assets-command: tar -czf configs.tar.gz -C packages common && sha256sum configs.tar.gz > configs.tar.gz.sha256
       assets: configs.tar.gz configs.tar.gz.sha256
+```
+
+A release whose files need the caller's toolchain, or several runners, builds them in a job of its own and passes them as artifacts:
+
+```yaml
+jobs:
+  assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: jdx/mise-action@v4.3.0
+      - run: mise run build && tar -czf app.tar.gz dist
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: release-assets
+          path: app.tar.gz
+  pre-release:
+    needs: assets
+    uses: droneey/.github/.github/workflows/cd-release.yaml@v2.8.0
+    permissions:
+      contents: write
+    with:
+      prerelease: true
+      assets-artifact: release-assets
+      assets: app.tar.gz
 ```
 
 ### cd-deploy-npm
