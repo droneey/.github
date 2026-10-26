@@ -20,7 +20,7 @@
 | **Community** | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How a change reaches `main` |
 | | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability |
 | | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Contributor Covenant 3.0 |
-| | [`ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE) | The bug report and feature request forms |
+| | [`ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE) | The idea, task and bug forms, each setting the issue type |
 | | [`PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | The pull request checklist |
 
 ## <img src=".brand/diamond.svg" width="18" height="18" alt=""> How it works
