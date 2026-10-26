@@ -1,18 +1,25 @@
-name: 🐞 Bug report
+name: 🐞 Bug
 description: Something behaves differently from what the docs say
-labels: [bug]
+type: Bug
 body:
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: What you did, what you expected, what you got
+      description: What you did and what you got
     validations:
       required: true
   - type: textarea
-    id: reproduce
+    id: expected
     attributes:
-      label: Steps to reproduce
+      label: What was expected
+      description: What the docs say, or what you thought would happen
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
       placeholder: |
         1.
         2.
