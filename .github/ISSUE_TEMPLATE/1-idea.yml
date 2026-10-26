@@ -3,9 +3,9 @@ description: An idea to discuss before it becomes work
 type: Idea
 body:
   - type: textarea
-    id: idea
+    id: what
     attributes:
-      label: The idea
+      label: What
       description: What the project could do or do differently
     validations:
       required: true
@@ -17,7 +17,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: information
+    id: context
     attributes:
-      label: Useful information
-      description: Facts, sources, sketches
+      label: Context
+      description: Links, sources, sketches, anything else that helps

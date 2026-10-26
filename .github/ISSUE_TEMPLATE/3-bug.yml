@@ -3,16 +3,16 @@ description: Something behaves differently from what the docs say
 type: Bug
 body:
   - type: textarea
-    id: what
+    id: actual
     attributes:
-      label: What happened
+      label: Actual
       description: What you did and what you got
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: What was expected
+      label: Expected
       description: What the docs say, or what you thought would happen
     validations:
       required: true
@@ -20,6 +20,7 @@ body:
     id: steps
     attributes:
       label: Steps
+      description: How to make it happen again, one step per line
       placeholder: |
         1.
         2.
@@ -34,8 +35,13 @@ body:
     validations:
       required: true
   - type: textarea
-    id: logs
+    id: output
     attributes:
       label: Output
       description: Relevant output, with secrets removed
       render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Links, sources, sketches, anything else that helps

@@ -17,9 +17,14 @@ body:
     validations:
       required: true
   - type: textarea
-    id: done
+    id: acceptance
     attributes:
-      label: Done when
-      description: What is true once the work is finished
+      label: Acceptance
+      description: What is true once the work is done
     validations:
       required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Links, sources, sketches, anything else that helps
