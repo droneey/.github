@@ -185,10 +185,10 @@ jobs:
 | Name | Default | Meaning |
 |---|---|---|
 | `project-number` | `16` | The number of the organisation project |
-| `PROJECTS_APP_KEY` | required | The private key of the GitHub App, an organisation secret |
+| `GH_PROJECTS_APP_KEY` | required | The private key of the GitHub App, an organisation secret |
 
 > [!NOTE]
-> The organisation holds the variable `PROJECTS_APP_CLIENT_ID`, the App’s Client ID, and the secret `PROJECTS_APP_KEY`, both visible to every repository that calls this. The App is installed on the organisation with the permissions Projects: read and write and Issues: read.
+> The organisation holds the variable `GH_PROJECTS_APP_CLIENT_ID`, the App’s Client ID, and the secret `GH_PROJECTS_APP_KEY`, both visible to every repository that calls this. The App is installed on the organisation with the permissions Projects: read and write and Issues: read.
 
 ## <img src=".brand/diamond.svg" width="18" height="18" alt=""> Renovate
 

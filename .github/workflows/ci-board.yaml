@@ -9,7 +9,7 @@ on:
         required: false
         default: 16
     secrets:
-      PROJECTS_APP_KEY:
+      GH_PROJECTS_APP_KEY:
         description: 'The private key of the organisation GitHub App that writes the project'
         required: true
 
@@ -23,8 +23,8 @@ jobs:
         id: app
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          client-id: ${{ vars.PROJECTS_APP_CLIENT_ID }}
-          private-key: ${{ secrets.PROJECTS_APP_KEY }}
+          client-id: ${{ vars.GH_PROJECTS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_PROJECTS_APP_KEY }}
           owner: droneey
           permission-issues: read
           permission-organization-projects: write
@@ -57,8 +57,8 @@ jobs:
         if: steps.branch.outputs.issue
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          client-id: ${{ vars.PROJECTS_APP_CLIENT_ID }}
-          private-key: ${{ secrets.PROJECTS_APP_KEY }}
+          client-id: ${{ vars.GH_PROJECTS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_PROJECTS_APP_KEY }}
           owner: droneey
           permission-issues: read
           permission-organization-projects: write
