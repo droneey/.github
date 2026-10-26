@@ -1,0 +1,103 @@
+name: 🗂️ Board
+
+on:
+  workflow_call:
+    inputs:
+      project-number:
+        description: 'The number of the organisation project that holds the issues'
+        type: number
+        required: false
+        default: 16
+    secrets:
+      GH_PROJECTS_APP_KEY:
+        description: 'The private key of the organisation GitHub App that writes the project'
+        required: true
+
+jobs:
+  add:
+    if: github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Create the app token
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.GH_PROJECTS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_PROJECTS_APP_KEY }}
+          owner: droneey
+          permission-issues: read
+          permission-organization-projects: write
+
+      - name: Add the issue to the project
+        uses: actions/add-to-project@5afcf98fcd03f1c2f92c3c83f58ae24323cc57fd # v2.0.0
+        with:
+          project-url: https://github.com/orgs/droneey/projects/${{ inputs.project-number }}
+          github-token: ${{ steps.app.outputs.token }}
+
+  track:
+    if: github.event_name == 'create' && github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Read the branch
+        id: branch
+        env:
+          BRANCH: ${{ github.event.ref }}
+        run: |
+          set -euo pipefail
+          if [[ "$BRANCH" =~ ^(feature|fix|hotfix)/([0-9]+)- ]]; then
+            echo "issue=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Branch $BRANCH names no issue, nothing to do"
+          fi
+
+      - name: Create the app token
+        id: app
+        if: steps.branch.outputs.issue
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.GH_PROJECTS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_PROJECTS_APP_KEY }}
+          owner: droneey
+          permission-issues: read
+          permission-organization-projects: write
+
+      - name: Move the issue to In progress
+        if: steps.branch.outputs.issue
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          ISSUE: ${{ steps.branch.outputs.issue }}
+          PROJECT_NUMBER: ${{ inputs.project-number }}
+          STATUS: In progress
+          FIND_QUERY: |
+            query($owner:String!,$number:Int!){organization(login:$owner){projectV2(number:$number){id
+              field(name:"Status"){... on ProjectV2SingleSelectField{id options{id name}}}}}}
+          ADD_QUERY: |
+            mutation($project:ID!,$content:ID!){addProjectV2ItemById(input:{projectId:$project,contentId:$content}){item{id}}}
+          SET_QUERY: |
+            mutation($project:ID!,$item:ID!,$field:ID!,$option:String!){updateProjectV2ItemFieldValue(input:{
+              projectId:$project,itemId:$item,fieldId:$field,value:{singleSelectOptionId:$option}}){projectV2Item{id}}}
+        run: |
+          set -euo pipefail
+          content=$(gh api "repos/$REPO/issues/$ISSUE" --jq 'select(.pull_request == null) | .node_id' 2>/dev/null || true)
+          if [ -z "$content" ]; then
+            echo "$REPO has no issue $ISSUE, nothing to do"
+            exit 0
+          fi
+
+          meta=$(gh api graphql -f owner=droneey -F number="$PROJECT_NUMBER" -f query="$FIND_QUERY")
+          project=$(jq -r '.data.organization.projectV2.id' <<<"$meta")
+          field=$(jq -r '.data.organization.projectV2.field.id' <<<"$meta")
+          option=$(jq -r --arg status "$STATUS" '.data.organization.projectV2.field.options[] | select(.name == $status) | .id' <<<"$meta")
+          if [ -z "$option" ]; then
+            echo "::error::Project $PROJECT_NUMBER has no Status option named $STATUS"
+            exit 1
+          fi
+
+          # an issue already on the project returns its existing item
+          item=$(gh api graphql -f project="$project" -f content="$content" -f query="$ADD_QUERY" \
+            --jq '.data.addProjectV2ItemById.item.id')
+          gh api graphql -f project="$project" -f item="$item" -f field="$field" -f option="$option" -f query="$SET_QUERY" >/dev/null
+          echo "Issue $ISSUE is $STATUS on project $PROJECT_NUMBER"

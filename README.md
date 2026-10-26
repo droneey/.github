@@ -16,6 +16,7 @@
 | **Workflows** | [`cd-version`](.github/workflows/cd-version.yaml) | Tags each merge to `main`; the branch prefix sets the bump |
 | | [`cd-release`](.github/workflows/cd-release.yaml) | Opens the release of a tag, with its `feat` and `fix` commits as notes |
 | | [`cd-deploy-npm`](.github/workflows/cd-deploy-npm.yaml) | Builds the packages and publishes them to npm |
+| | [`ci-board`](.github/workflows/ci-board.yaml) | Puts new issues on the organisation’s board and moves one to In progress when its branch is created |
 | **Renovate** | [`default.json`](default.json) | Monthly dependency updates in the fleet’s commit format |
 | **Community** | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How a change reaches `main` |
 | | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability |
@@ -123,10 +124,10 @@ jobs:
   assets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: jdx/mise-action@v4.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
       - run: mise run build && tar -czf app.tar.gz dist
-      - uses: actions/upload-artifact@v7.0.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-assets
           path: app.tar.gz
@@ -165,6 +166,29 @@ jobs:
 
 > [!NOTE]
 > Each package on npmjs.com names its trusted publisher: GitHub Actions, organisation `droneey`, its repository and the calling workflow, `cd-deploy.yaml`, with no environment. A new package is published once by hand, then gets the same.
+
+### ci-board
+
+Puts an issue on the organisation’s project when it is opened or reopened; the project’s own workflow sets its Status to Todo. When a branch `feature/<n>-…`, `fix/<n>-…` or `hotfix/<n>-…` is created, issue `<n>` of the repository is added if it is missing and moved to In progress, the option found by its name. Any other event or branch name does nothing. It signs in as the organisation’s GitHub App, never as a person.
+
+```yaml
+on:
+  issues:
+    types: [opened, reopened]
+  create:
+jobs:
+  board:
+    uses: droneey/.github/.github/workflows/ci-board.yaml@v2.11.0
+    secrets: inherit
+```
+
+| Name | Default | Meaning |
+|---|---|---|
+| `project-number` | `16` | The number of the organisation project |
+| `GH_PROJECTS_APP_KEY` | required | The private key of the GitHub App, an organisation secret |
+
+> [!NOTE]
+> The organisation holds the variable `GH_PROJECTS_APP_CLIENT_ID`, the App’s Client ID, and the secret `GH_PROJECTS_APP_KEY`, both visible to every repository that calls this. The App is installed on the organisation with the permissions Projects: read and write and Issues: read.
 
 ## <img src=".brand/diamond.svg" width="18" height="18" alt=""> Renovate
 
